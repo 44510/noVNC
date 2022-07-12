@@ -30,8 +30,8 @@ window.updateSetting = (name, value) => {
     }
 }
 
-import "core-js/stable";
-import "regenerator-runtime/runtime";
+//import "core-js/stable";
+//import "regenerator-runtime/runtime";
 import * as Log from '../core/util/logging.js';
 import _, { l10n } from './localization.js';
 import { isTouchDevice, isSafari, hasScrollbarGutter, dragThreshold, supportsBinaryClipboard, isFirefox, isWindows, isIOS, supportsPointerLock }
@@ -42,6 +42,8 @@ import keysyms from "../core/input/keysymdef.js";
 import Keyboard from "../core/input/keyboard.js";
 import RFB from "../core/rfb.js";
 import * as WebUtil from "./webutil.js";
+
+import SessionRecorder from "./SessionRecorder.js";
 
 const PAGE_TITLE = "KasmVNC";
 
@@ -71,6 +73,8 @@ const UI = {
     inhibitReconnect: true,
     reconnectCallback: null,
     reconnectPassword: null,
+
+    sessionRecorder: new SessionRecorder(),
 
     prime() {
         return WebUtil.initSettings().then(() => {
@@ -1487,6 +1491,8 @@ const UI = {
             }
 
         }, true);
+
+        UI.sessionRecorder.initialize(UI.rfb);
     },
 
     disconnect() {
@@ -1660,6 +1666,18 @@ const UI = {
                         UI.forceSetting('enable_ime', false, false);
                         UI.toggleIMEMode();
                     }
+                    break;
+                case 'start_session_recording':
+                    UI.rfb.showDotCursor = true;
+                    UI.sessionRecorder.start();
+
+                    document.querySelector("#kasm_recording_frame").classList.add("is-visible");
+                    break;
+
+                 case 'stop_session_recording':
+                    UI.rfb.showDotCursor = false;
+                    UI.sessionRecorder.stop();
+                    document.querySelector("#kasm_recording_frame").classList.remove("is-visible");
                     break;
             }
         }
